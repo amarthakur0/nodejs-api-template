@@ -47,11 +47,11 @@ Build required API's for your application in quick time using this Node JS Templ
 * **.gitignore** - All folder & files which will not be pushed to git will be maintained here
 
 ### Book Component code files -
-* **route** - /routes/v1/book.js ([Open file](/blob/master/routes/v1/book.js))
-* **joi schema wrapper** - /middlewares/validations/book.js ([Open file](/blob/master/middlewares/validations/book.js))
-* **joi schema** - /middlewares/validations/joi/book.js ([Open file](/blob/master/middlewares/validations/joi/book.js))
-* **sequelize schema** - /db/sequelize/schema/book.js ([Open file](/blob/master/db/sequelize/schema/book.js))
-* **sequelize book class** - /db/sequelize/book.js ([Open file](/blob/master/db/sequelize/book.js))
+* **route** - /routes/v1/book.js ([Open file](/routes/v1/book.js))
+* **joi schema wrapper** - /middlewares/validations/book.js ([Open file](/middlewares/validations/book.js))
+* **joi schema** - /middlewares/validations/joi/book.js ([Open file](/middlewares/validations/joi/book.js))
+* **sequelize schema** - /db/sequelize/schema/book.js ([Open file](/db/sequelize/schema/book.js))
+* **sequelize book class** - /db/sequelize/book.js ([Open file](/db/sequelize/book.js))
 
 ### Create new RSA(512 bit) Public & Private key pair and place it in "/keys/auth" folder -
 * Online RSA Key Generator ([Link](https://travistidwell.com/jsencrypt/demo/))
