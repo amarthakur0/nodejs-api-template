@@ -6,7 +6,7 @@ const express = require('express'),
   reqlib = require('app-root-path').require,
   sendResponse = reqlib('/middlewares/response'),
   logger = reqlib('/helpers/logger'),
-  User = reqlib('/db/sequelize/user'),
+  User = reqlib('/db/mysql/user'),
   auth = reqlib('/middlewares/auth');
 const { setErrorResponse } = reqlib('/helpers/response.js');
 // Middlewares

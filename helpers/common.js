@@ -210,11 +210,6 @@ const formatDate = (date, format = 'YYYY-MM-DD') => {
   }
 }
 
-// Get current timestamp
-const getCurrentTimestamp = () => {
-  return formatDate(Date.now(), 'YYYY-MM-DD HH:mm:ss');
-}
-
 // Rename file
 const renameMulterFile = (originalFileName, prefix = 'file') => {
   try {
@@ -373,7 +368,6 @@ module.exports = {
   toTitleCase,
   isObjectEmpty,
   formatDate,
-  getCurrentTimestamp,
   renameMulterFile,
   readExcelFile,
   createExcelFile,

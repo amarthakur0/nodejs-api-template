@@ -11,7 +11,7 @@ Build required API's for your application in quick time using this Node JS Templ
 
 ### Features - 
 * Built on Express frameowrk ([Documentation link](https://expressjs.com/))
-* MySQL DB with Sequelize ORM ([Documentation link](https://sequelize.org/))
+* MySQL DB with MySQL2 with Preapred Statements to avoid SQL injections ([Documentation link](https://www.npmjs.com/package/mysql2))
 * Mongo DB with Mongoose ORM ([Documentation link](https://mongoosejs.com/))
 * API validations using Hapi Joi ([Documentation link](https://hapi.dev/module/joi/))
 * Auth using JWT token ([Documentation link](https://www.npmjs.com/package/jsonwebtoken))
@@ -50,8 +50,7 @@ Build required API's for your application in quick time using this Node JS Templ
 * **route** - /routes/v1/book.js ([Open file](/routes/v1/book.js))
 * **joi schema wrapper** - /middlewares/validations/book.js ([Open file](/middlewares/validations/book.js))
 * **joi schema** - /middlewares/validations/joi/book.js ([Open file](/middlewares/validations/joi/book.js))
-* **sequelize schema** - /db/sequelize/schema/book.js ([Open file](/db/sequelize/schema/book.js))
-* **sequelize book class** - /db/sequelize/book.js ([Open file](/db/sequelize/book.js))
+* **mysql book class** - /db/mysql/book.js ([Open file](/db/mysql/book.js))
 
 ### Create new RSA(512 bit) Public & Private key pair and place it in "/keys/auth" folder -
 * Online RSA Key Generator ([Link](https://travistidwell.com/jsencrypt/demo/))
@@ -67,4 +66,4 @@ Build required API's for your application in quick time using this Node JS Templ
     npm run dev
     ```
 
-### Checkout core mysql2 package based implementation ([Open branch](../../tree/mysql2-based))
+### Checkout Sequelize based implementation ([Open branch](../../tree/master))

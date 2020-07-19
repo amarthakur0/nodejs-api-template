@@ -20,7 +20,7 @@ const express = require('express'),
   reqlib = require('app-root-path').require,
   requestIp = require('request-ip'),
   logger = reqlib('/helpers/logger'),
-  SequelizeConn = reqlib('/db/sequelize/sequelize'),
+  MySQLDB = reqlib('/db/mysql/mysql'),
   RedisDB = reqlib('/db/redis/redis'),
   MongoDB = reqlib('/db/mongo/mongo'),
   getMessage = reqlib('/constants/messages');
@@ -108,8 +108,8 @@ app.listen(PORT, async () => {
 
   try {
     // Connect mysql db
-    const sequelizeConnObj = new SequelizeConn();
-    const connectionStatus = await sequelizeConnObj.connectDB();
+    const mysqlDbObj = new MySQLDB();
+    const connectionStatus = await mysqlDbObj.connectDB();
     if(!connectionStatus) {
       exitProcess('Unable to connect to MySQL DB');
     }
@@ -143,6 +143,7 @@ app.listen(PORT, async () => {
     exitProcess('Unable to connect to Mongo DB', e);
   }
   */
+
 });
 
 // Handle unhandled rejection

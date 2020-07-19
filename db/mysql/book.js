@@ -3,21 +3,23 @@
 // Required modules
 const reqlib = require('app-root-path').require,
   logger = reqlib('/helpers/logger'),
-  SequelizeConn = new (reqlib('/db/sequelize/sequelize'))(),
+  MySQLDB = new (reqlib('/db/mysql/mysql'))(),
   getMessage = reqlib('/constants/messages'),
   getErrorCode = reqlib('/constants/errorCodes');
-const { getCurrentTimestamp } = reqlib('/helpers/common');
 
 // Book Table related functions
 class Book {
   constructor() {
-    this.BookSchema = SequelizeConn.getSequelizeSchema().Book;
+    this.tableName = 'book';
     this.somethingWrongMsg = getMessage['SOMETHING_WRONG'];
     this.successMsg = getMessage['SUCCESS'];
     this.dataNotFoundMsg = 'Book not found';
     this.dataNotFoundErrorCode = getErrorCode['DATA_NOT_FOUND'];
-    this.sqlSelectFields = ['bookId', 'isbnNumber', 'bookName', 'bookSummary',
-      'bookAuthor', 'publication', 'publishDate', 'createdDate'];
+    this.dateFormatYMD = '%Y-%m-%d';
+    this.sqlSelectFields = `book_id AS bookId, isbn_number AS isbnNumber, book_name AS bookName,
+      book_summary AS bookSummary, book_author AS bookAuthor, publication,
+      DATE_FORMAT(publish_date, '${this.dateFormatYMD}') AS publishDate,
+      DATE_FORMAT(created_date, '${this.dateFormatYMD}') AS createdDate`;
   }
 
   // Get Book details by Book Id
@@ -26,20 +28,21 @@ class Book {
       const { bookId } = inputData;
 
       // Get book from DB
-      const bookResult = await this.BookSchema.findOne({
-        attributes: this.sqlSelectFields,
-        where: { bookId, status: 'A' }
-      });
+      const selectSqlString = `SELECT ${this.sqlSelectFields}
+        FROM \`${this.tableName}\` 
+        WHERE book_id = ? AND status = 'A' LIMIT 1`,
+        selectSqlData = [bookId],
+        bookResult = await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
       // Send error message
-      if(!bookResult || !(bookResult instanceof this.BookSchema) || !bookResult.bookId) {
+      if(!bookResult || bookResult.length === 0 || !bookResult[0].bookId) {
         return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
       }
 
       // Book present
-      return { error: false, message: 'Book found', data: { book: [bookResult] } };
+      return { error: false, message: 'Book found', data: { book: [bookResult[0]] } };
     }
     catch(e) {
-      logger.error(`sequelize:book getByBookId() function => Error = `, e);
+      logger.error(`mysql:book getByBookId() function => Error = `, e);
       throw e;
     }
   }
@@ -50,20 +53,21 @@ class Book {
       const { isbnNumber } = inputData;
 
       // Get book from DB
-      const bookResult = await this.BookSchema.findOne({
-        attributes: this.sqlSelectFields.concat(['status']),
-        where: { isbnNumber }
-      });
+      const selectSqlString = `SELECT ${this.sqlSelectFields}, status
+        FROM \`${this.tableName}\` 
+        WHERE isbn_number = ? LIMIT 1`,
+        selectSqlData = [isbnNumber],
+        bookResult = await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
       // Send error message
-      if(!bookResult || !(bookResult instanceof this.BookSchema) || !bookResult.bookId) {
+      if(!bookResult || bookResult.length === 0 || !bookResult[0].bookId) {
         return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
       }
 
       // Book present
-      return { error: false, message: 'Book found', data: { book: [bookResult] } };
+      return { error: false, message: 'Book found', data: { book: [bookResult[0]] } };
     }
     catch(e) {
-      logger.error(`sequelize:book getByIsbnNumber() function => Error = `, e);
+      logger.error(`mysql:book getByIsbnNumber() function => Error = `, e);
       throw e;
     }
   }
@@ -72,10 +76,11 @@ class Book {
   async getAll(inputData = {}) {
     try {
       // Get all books from DB
-      const bookResult = await this.BookSchema.findAll({
-        attributes: this.sqlSelectFields,
-        where: { status: 'A' }
-      });
+      const selectSqlString = `SELECT ${this.sqlSelectFields}
+        FROM \`${this.tableName}\` 
+        WHERE status = 'A'`,
+        selectSqlData = [],
+        bookResult = await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
       // Send error message
       if(!bookResult || bookResult.length === 0) {
         return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
@@ -85,7 +90,7 @@ class Book {
       return { error: false, message: 'Books found', data: { book: bookResult } };
     }
     catch(e) {
-      logger.error(`sequelize:book getAll() function => Error = `, e);
+      logger.error(`mysql:book getAll() function => Error = `, e);
       throw e;
     }
   }
@@ -102,20 +107,23 @@ class Book {
         return { error: true, message: 'ISBN Number already exists' };
       }
 
+      // Build Insert Query & Data
+      const insertSqlString = `INSERT INTO \`${this.tableName}\` 
+        (isbn_number, book_name, book_summary, book_author, publication, publish_date, status, created_by) 
+        VALUES(?,?,?,?,?,?,?,?)`;
+      const insertSqlData = [
+        isbnNumber, bookName, bookSummary || '', bookAuthor || '',
+        publication || '', publishDate, 'A', loggedInUserId
+      ];
+
       // Insert into table
-      const insertResult = await this.BookSchema.create({
-        isbnNumber, bookName, publishDate,
-        bookSummary: bookSummary || null,
-        bookAuthor: bookAuthor || null, 
-        publication: publication || null,
-        status: 'A', createdBy: loggedInUserId
-      });
+      const insertResult = await MySQLDB.preparedQuery(insertSqlString, insertSqlData);
       if(!insertResult) {
         return { error: true, message: 'Unable to create Book' };
       }
 
       // Inserted Id
-      const insertId = insertResult.id;
+      const insertId = insertResult.insertId;
 
       // Send back Success response
       return {
@@ -125,7 +133,7 @@ class Book {
       };
     }
     catch(e) {
-      logger.error(`sequelize:book insert() function => Error = `, e);
+      logger.error(`mysql:book insert() function => Error = `, e);
       throw e;
     }
   }
@@ -139,18 +147,17 @@ class Book {
       const bookCheckResult = await this.getByBookId({ bookId });
       if(bookCheckResult.error) return bookCheckResult;
 
+      // Build Update Query & Data
+      const updateSqlString = `UPDATE \`${this.tableName}\` SET book_name = ?, book_summary = ?, book_author = ?,
+        publication = ?, publish_date = ?, modified_by = ?, modified_date = ?
+        WHERE book_id = ?`;
+      const updateSqlData = [
+        bookName, bookSummary || '', bookAuthor || '', publication || '',
+        publishDate, loggedInUserId, MySQLDB.getCurrentTimestamp(), bookId
+      ];
+
       // Update record
-      const updateResult = await this.BookSchema.update(
-        {
-          bookName, publishDate,
-          bookSummary: bookSummary || null,
-          bookAuthor: bookAuthor || null, 
-          publication: publication || null,
-          modifiedBy: loggedInUserId,
-          modifiedDate: getCurrentTimestamp()
-        },
-        { where: { bookId } }
-      );
+      const updateResult = await MySQLDB.preparedQuery(updateSqlString, updateSqlData);
       if(!updateResult) {
         return { error: true, message: 'Unable to update Book' };
       }
@@ -163,7 +170,7 @@ class Book {
       };
     }
     catch(e) {
-      logger.error(`sequelize:book update() function => Error = `, e);
+      logger.error(`mysql:book update() function => Error = `, e);
       throw e;
     }
   }
@@ -177,11 +184,13 @@ class Book {
       const bookCheckResult = await this.getByBookId({ bookId });
       if(bookCheckResult.error) return bookCheckResult;
 
+      // Build Update Query & Data
+      const updateSqlString = `UPDATE \`${this.tableName}\` SET status = ?, modified_by = ?, modified_date = ?
+        WHERE book_id = ?`;
+      const updateSqlData = ['I', loggedInUserId, MySQLDB.getCurrentTimestamp(), bookId];
+
       // Update record
-      const updateResult = await this.BookSchema.update(
-        { status: 'I', modifiedBy: loggedInUserId, modifiedDate: getCurrentTimestamp() },
-        { where: { bookId } }
-      );
+      const updateResult = await MySQLDB.preparedQuery(updateSqlString, updateSqlData);
       if(!updateResult) {
         return { error: true, message: 'Unable to delete Book' };
       }
@@ -194,7 +203,7 @@ class Book {
       };
     }
     catch(e) {
-      logger.error(`sequelize:book delete() function => Error = `, e);
+      logger.error(`mysql:book delete() function => Error = `, e);
       throw e;
     }
   }

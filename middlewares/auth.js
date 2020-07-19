@@ -7,8 +7,8 @@ const jwt = require('jsonwebtoken'),
   appRoot = require('app-root-path'),
   reqlib = appRoot.require,
   logger = reqlib('/helpers/logger'),
-  User = reqlib('/db/sequelize/user'),
-  UserAuthToken = reqlib('/db/sequelize/userAuthToken'),
+  User = reqlib('/db/mysql/user'),
+  UserAuthToken = reqlib('/db/mysql/userAuthToken'),
   getErrorCode = reqlib('/constants/errorCodes');
 // Read public key
 const publicKey = fs.readFileSync(appRoot + '/keys/auth/public.pem', 'utf8');
@@ -93,7 +93,7 @@ const auth = (req, res, next) => {
 
         // All good then set user details & proceed to next middleware
         res.locals._TMP.user = {
-          ...getUserResult.data.user[0].dataValues,
+          ...getUserResult.data.user[0],
           source: decoded.source
         };
 

@@ -3,22 +3,23 @@
 // Required modules
 const reqlib = require('app-root-path').require,
   logger = reqlib('/helpers/logger'),
+  MySQLDB = new (reqlib('/db/mysql/mysql'))(),
   getMessage = reqlib('/constants/messages'),
   getErrorCode = reqlib('/constants/errorCodes'),
-  SequelizeConn = new (reqlib('/db/sequelize/sequelize'))(),
-  UserAuthToken = reqlib('/db/sequelize/userAuthToken');
-const { generateHash, getCurrentTimestamp } = reqlib('/helpers/common');
+  UserAuthToken = reqlib('/db/mysql/userAuthToken');
+const { generateHash } = reqlib('/helpers/common');
 const { generateAuthToken } = reqlib('/helpers/auth');
 
 // User Table related functions
 class User {
   constructor() {
-    this.UserSchema = SequelizeConn.getSequelizeSchema().User;
+    this.tableName = 'user';
     this.somethingWrongMsg = getMessage['SOMETHING_WRONG'];
     this.successMsg = getMessage['SUCCESS'];
     this.dataNotFoundMsg = 'User not found';
     this.dataNotFoundErrorCode = getErrorCode['DATA_NOT_FOUND'];
-    this.sqlSelectFields = ['userId', 'username', 'emailId', 'mobileNo', 'displayName'];
+    this.sqlSelectFields = `user_id AS userId, username, email_id AS emailId, 
+      mobile_no AS mobileNo, display_name AS displayName`;
   }
 
   // Get User details by User Id
@@ -27,20 +28,21 @@ class User {
       const { userId } = inputData;
 
       // Get user from DB
-      const userResult = await this.UserSchema.findOne({
-        attributes: this.sqlSelectFields,
-        where: { userId, status: 'A' }
-      });
+      const selectSqlString = `SELECT ${this.sqlSelectFields}
+        FROM \`${this.tableName}\` 
+        WHERE user_id = ? AND status = 'A' LIMIT 1`,
+        selectSqlData = [userId],
+        userResult = await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
       // Send error message
-      if(!userResult || !(userResult instanceof this.UserSchema) || !userResult.userId) {
+      if(!userResult || userResult.length === 0 || !userResult[0].userId) {
         return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
       }
 
       // User present
-      return { error: false, message: 'User found', data: { user: [userResult] } };
+      return { error: false, message: 'User found', data: { user: [userResult[0]] } };
     }
     catch(e) {
-      logger.error(`sequelize:user getByUserId() function => Error = `, e);
+      logger.error(`mysql:user getByUserId() function => Error = `, e);
       throw e;
     }
   }
@@ -51,20 +53,14 @@ class User {
       const { username } = inputData;
 
       // Get user from DB
-      const userResult = await this.UserSchema.findOne({
-        attributes: this.sqlSelectFields.concat(['password', 'status']),
-        where: { username }
-      });
-      // Send error message
-      if(!userResult || !(userResult instanceof this.UserSchema) || !userResult.userId) {
-        return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
-      }
-
-      // User present
-      return { error: false, message: 'User found', data: { user: [userResult] } };
+      const selectSqlString = `SELECT ${this.sqlSelectFields}, password, status
+        FROM \`${this.tableName}\` WHERE username = ?`,
+        selectSqlData = [username];
+      
+      return await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
     }
     catch(e) {
-      logger.error(`sequelize:user getUserByUsername() function => Error = `, e);
+      logger.error(`mysql:user getUserByUsername() function => Error = `, e);
       throw e;
     }
   }
@@ -73,38 +69,44 @@ class User {
   async insert(inputData) {
     try {
       let { username, displayName, emailId, mobileNo, password } = inputData;
+      let selectSqlString, selectSqlData;
 
       // Check if Username already present in Table
       const usernameCheckResult = await this.getUserByUsername({ username });
-      // Send error message if user is found
-      if(!usernameCheckResult.error && usernameCheckResult.data.user.length > 0) {
+      // Send error message
+      if(usernameCheckResult && usernameCheckResult.length > 0 && usernameCheckResult[0].userId > 0) {
         return { error: true, message: 'Username already exists' };
       }
 
       // Check if Email Id already present in Table
-      const emailIdCheckResult = await this.UserSchema.findOne({
-        attributes: ['userId'],
-        where: { emailId }
-      });
+      selectSqlString = `SELECT user_id AS userId FROM \`${this.tableName}\` WHERE email_id = ?`;
+      selectSqlData = [emailId];
+      const emailIdCheckResult = await MySQLDB.preparedQuery(selectSqlString, selectSqlData);
       // Send error message
-      if(emailIdCheckResult && emailIdCheckResult instanceof this.UserSchema && emailIdCheckResult.userId > 0) {
+      if(emailIdCheckResult && emailIdCheckResult.length > 0 && emailIdCheckResult[0].userId > 0) {
         return { error: true, message: 'Email id already exists' };
       }
 
       // Convert password to md5 hash
       password = generateHash(password);
 
+      // Build Insert Query & Data
+      const insertSqlString = `INSERT INTO \`${this.tableName}\` 
+        (username, display_name, email_id, mobile_no, password, status, created_by) 
+        VALUES(?,?,?,?,?,?,?)`;
+      const insertSqlData = [
+        username, displayName, emailId, mobileNo,
+        password, 'A', 0
+      ];
+
       // Insert into table
-      const insertResult = await this.UserSchema.create({
-        username, displayName, emailId, mobileNo, password,
-        status: 'A', createdBy: 0
-      });
+      const insertResult = await MySQLDB.preparedQuery(insertSqlString, insertSqlData);
       if(!insertResult) {
         return { error: true, message: 'Unable to create User' };
       }
 
       // Inserted Id
-      const insertId = insertResult.id;
+      const insertId = insertResult.insertId;
 
       // Send back Success response
       return {
@@ -114,7 +116,7 @@ class User {
       };
     }
     catch(e) {
-      logger.error(`sequelize:user insert() function => Error = `, e);
+      logger.error(`mysql:user insert() function => Error = `, e);
       throw e;
     }
   }
@@ -128,11 +130,14 @@ class User {
       const userCheckResult = await this.getByUserId({ userId });
       if(userCheckResult.error) return userCheckResult;
 
+      // Build Update Query & Data
+      const updateSqlString = `UPDATE \`${this.tableName}\` SET display_name = ?, mobile_no = ?,
+        modified_by = ?, modified_date = ?
+        WHERE user_id = ?`;
+      const updateSqlData = [displayName, mobileNo, loggedInUserId, MySQLDB.getCurrentTimestamp(), userId];
+
       // Update record
-      const updateResult = await this.UserSchema.update(
-        { displayName, mobileNo, modifiedBy: loggedInUserId, modifiedDate: getCurrentTimestamp() },
-        { where: { userId } }
-      );
+      const updateResult = await MySQLDB.preparedQuery(updateSqlString, updateSqlData);
       if(!updateResult) {
         return { error: true, message: 'Unable to update User' };
       }
@@ -145,7 +150,7 @@ class User {
       };
     }
     catch(e) {
-      logger.error(`sequelize:user update() function => Error = `, e);
+      logger.error(`mysql:user update() function => Error = `, e);
       throw e;
     }
   }
@@ -159,11 +164,13 @@ class User {
       const userCheckResult = await this.getByUserId({ userId });
       if(userCheckResult.error) return userCheckResult;
 
+      // Build Update Query & Data
+      const updateSqlString = `UPDATE \`${this.tableName}\` SET status = ?, modified_by = ?, modified_date = ?
+        WHERE user_id = ?`;
+      const updateSqlData = ['I', loggedInUserId, MySQLDB.getCurrentTimestamp(), userId];
+
       // Update record
-      const updateResult = await this.UserSchema.update(
-        { status: 'I', modifiedBy: loggedInUserId, modifiedDate: getCurrentTimestamp() },
-        { where: { userId } }
-      );
+      const updateResult = await MySQLDB.preparedQuery(updateSqlString, updateSqlData);
       if(!updateResult) {
         return { error: true, message: 'Unable to delete User' };
       }
@@ -176,7 +183,7 @@ class User {
       };
     }
     catch(e) {
-      logger.error(`sequelize:user delete() function => Error = `, e);
+      logger.error(`mysql:user delete() function => Error = `, e);
       throw e;
     }
   }
@@ -191,13 +198,13 @@ class User {
       password = generateHash(password);
 
       // Get user details by username
-      const userResultFull = await this.getUserByUsername({ username });
+      let userResult = await this.getUserByUsername({ username });
       // Username not found
-      if(userResultFull.error) {
+      if(!userResult || userResult.length === 0 || !userResult[0].userId) {
         return { error: true, message: this.dataNotFoundMsg };
       }
-      // Set first result
-      const userResult = Object.assign({}, userResultFull.data.user[0].dataValues);
+      // Get only first result
+      userResult = userResult[0];
 
       // Check if user is already deleted
       if(userResult.status !== 'A') {
@@ -225,13 +232,12 @@ class User {
       // Update last login time for User
       // Suppress error & log to file
       try {
-        await this.UserSchema.update(
-          { lastLoginTime: getCurrentTimestamp() },
-          { where: { userId } }
-        );
+        const updateSqlString = `UPDATE \`${this.tableName}\` SET last_login_time = ? WHERE user_id = ?`,
+          updateSqlData = [MySQLDB.getCurrentTimestamp(), userId];
+        await MySQLDB.preparedQuery(updateSqlString, updateSqlData);
       }
       catch(e) {
-        logger.error(`sequelize:user login() function, Update last login time => Error = `, e);
+        logger.error(`mysql:user login() function, Update last login time => Error = `, e);
       }
 
       // Delete password & status from user result
@@ -250,7 +256,7 @@ class User {
       };
     }
     catch(e) {
-      logger.error(`sequelize:user login() function => Error = `, e);
+      logger.error(`mysql:user login() function => Error = `, e);
       throw e;
     }
   }
@@ -262,7 +268,7 @@ class User {
       return authTokenObj.delete(inputData);
     }
     catch(e) {
-      logger.error(`sequelize:user logout() function => Error = `, e);
+      logger.error(`mysql:user logout() function => Error = `, e);
       throw e;
     }
   }
@@ -303,7 +309,7 @@ class User {
       };
     }
     catch(e) {
-      logger.error(`sequelize:user generateRefreshToken() function => Error = `, e);
+      logger.error(`mysql:user generateRefreshToken() function => Error = `, e);
       throw e;
     }
   }
