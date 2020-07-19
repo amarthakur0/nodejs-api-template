@@ -7,7 +7,7 @@ Build required API's for your application in quick time using this Node JS Templ
 * **Caching** - Redis
 
 ### Coming soon - 
-* Component based structure. Different folder for each component (will be different different git repo)
+* Component based structure. Different folder for each component (will be on different git repo)
 
 ### Features - 
 * Built on Express frameowrk ([Documentation link](https://expressjs.com/))
