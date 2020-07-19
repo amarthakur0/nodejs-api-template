@@ -67,4 +67,4 @@ Build required API's for your application in quick time using this Node JS Templ
     npm run dev
     ```
 
-### Checkout core mysql2 package based implementation ([Open branch](/tree/mysql2-based))
+### Checkout core mysql2 package based implementation ([Open branch](../../tree/mysql2-based))
