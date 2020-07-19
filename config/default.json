@@ -1,0 +1,48 @@
+{
+  "env": "development",
+  "host": "http://localhost:3000",
+  "port": 3000,
+  "debug": 1,
+  "mysql": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "Root@123",
+    "connectionLimit": 10,
+    "database": "nodejs_api",
+    "timezone": "+05:30"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379
+  },
+  "mongo": {
+    "uri": "mongodb://localhost:27017/nodejs_api",
+    "user": "node",
+    "password": "Node@123",
+    "poolSize": 10
+  },
+  "auth": {
+    "algorithm": "RS256",
+    "tokenExpiryInMin": {
+      "web": 10,
+      "android": 120
+    },
+    "issuer": "Node API Ltd",
+    "audience": "http://localhost"
+  },
+  "email": {
+    "noReply": "noreply@gmail.com",
+    "gmail": {
+      "user": "user@gmail.com",
+      "password": "password"
+    },
+    "smtp": {
+      "user": "user@gmail.com",
+      "password": "password",
+      "host": "localhost",
+      "port": 25,
+      "secure": false
+    }
+  }
+}

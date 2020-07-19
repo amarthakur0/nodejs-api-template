@@ -1,0 +1,458 @@
+{
+	"info": {
+		"_postman_id": "4f469857-b799-489e-8a40-1ce7a55b2706",
+		"name": "Node API Template",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"test\",\n\t\"displayName\": \"Test User\",\n\t\"emailId\": \"test@gmail.com\",\n\t\"mobileNo\": \"9999988888\",\n\t\"password\": \"Test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/create",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"userId\": 4,\n\t\"displayName\": \"Test\",\n\t\"mobileNo\": \"8888877777\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/update",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"userId\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/delete",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6d637ffe-68f7-47b5-80a6-13c3643d5487",
+								"exec": [
+									"var authToken = pm.response.headers.get(\"X-Auth-Token\");\r",
+									"pm.environment.set(\"authToken\", \"Bearer \" + authToken);\r",
+									"\r",
+									"var refreshToken = pm.response.headers.get(\"X-Refresh-Token\");\r",
+									"pm.environment.set(\"refreshToken\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"test\",\n\t\"password\": \"Test@123\",\n\t\"source\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/login",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Auth Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539e71d-fa4a-4604-9d08-fe7a3ef2d1c7",
+								"exec": [
+									"var authToken = pm.response.headers.get(\"X-Auth-Token\");\r",
+									"pm.environment.set(\"authToken\", \"Bearer \" + authToken);\r",
+									"\r",
+									"var refreshToken = pm.response.headers.get(\"X-Refresh-Token\");\r",
+									"pm.environment.set(\"refreshToken\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"userId\": 4,\n\t\"refreshToken\": \"a3eeedce-3566-4bbc-af84-d7ccceea324f\"\n}\t",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/refreshToken",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"refreshToken"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout User",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/logout",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by User Id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "{{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/user/get/4",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"user",
+								"get",
+								"4"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Book",
+			"item": [
+				{
+					"name": "Create Book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"isbnNumber\": \"978-3-16-148410-8\",\n\t\"bookName\": \"Harry Potter Part 1\",\n\t\"bookSummary\": \"Magic movie\",\n\t\"bookAuthor\": \"J. K. Rowling\",\n\t\"publication\": \"Bloomsbury Publishing\",\n\t\"publishDate\": \"2005-01-01\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/book/create",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"book",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"bookId\": 5,\n\t\"bookName\": \"Harry Potter Part 2\",\n\t\"bookSummary\": \"Magic movie, Hoggard\",\n\t\"bookAuthor\": \"J. K. Rowling\",\n\t\"publication\": \"Bloomsbury Publishing\",\n\t\"publishDate\": \"2010-01-01\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/book/update",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"book",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"bookId\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/book/delete",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"book",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Book by Book Id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "{{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/book/get/1",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"book",
+								"get",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Books",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "{{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiUrl}}/book/getall",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"book",
+								"getall"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"variable": [
+		{
+			"id": "a8e4effc-9936-4a53-9ad2-9df0bd17c0de",
+			"key": "apiUrl",
+			"value": "http://localhost:3000/api/v1/"
+		},
+		{
+			"id": "bba1244c-66ef-443e-9495-2f9e05016bb7",
+			"key": "authToken",
+			"value": ""
+		}
+	],
+	"protocolProfileBehavior": {}
+}
