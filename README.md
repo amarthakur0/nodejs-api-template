@@ -6,8 +6,8 @@ Build required API's for your application in quick time using this Node JS Templ
 * **Database** - MySQL, MongoDB
 * **Caching** - Redis
 
-### Coming soon - 
-* Component based structure. Different folder for each component (will be on different git repo)
+### Checkout Component based NodeJS API Template - 
+* Git repo - ([Link](https://github.com/amarthakur0/nodejs-api-component))
 
 ### Features - 
 * Built on Express frameowrk ([Documentation link](https://expressjs.com/))
