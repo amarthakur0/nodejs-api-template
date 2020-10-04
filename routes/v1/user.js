@@ -139,7 +139,7 @@ router.post('/login', validateLoginUserApi, loginRateLimiter, async (req, res, n
         logger.error(`Error in ${req.originalUrl} api, Login rate limiter consume set, Error = `, e);
       }
 
-      return setErrorResponse(res, next, loginResult.message);
+      return setErrorResponse(res, next, loginResult.message, 400);
     }
 
     // Set auth token & refresh token in response header
