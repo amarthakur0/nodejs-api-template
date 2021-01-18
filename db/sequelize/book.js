@@ -7,6 +7,7 @@ const reqlib = require('app-root-path').require,
   getMessage = reqlib('/constants/messages'),
   getErrorCode = reqlib('/constants/errorCodes');
 const { getCurrentTimestamp } = reqlib('/helpers/common');
+const { Op } = require('sequelize');
 
 // Book Table related functions
 class Book {
@@ -86,6 +87,60 @@ class Book {
     }
     catch(e) {
       logger.error(`sequelize:book getAll() function => Error = `, e);
+      throw e;
+    }
+  }
+
+  // Get Books Listing by filter & pagination
+  async getListing(inputData = {}) {
+    try {
+      // Input data
+      let { isbnNumber, bookName, fromDate, toDate, pageNum, perPage } = inputData;
+      // For Day start & end time
+      const dayStartTime = ' 00:00:00',
+        dayEndTime = ' 23:59:59';
+
+      // For pagination
+      pageNum = pageNum ? parseInt(pageNum, 10) : 1;
+      perPage = perPage ? parseInt(perPage, 10) : 10;
+      const limit = perPage,
+        offset = (pageNum - 1) * perPage;
+
+      // For Where Clause
+      const whereClauseObj = { status: 'A' };
+      // For ISBN Number
+      if(isbnNumber) {
+        whereClauseObj.isbnNumber = isbnNumber;
+      }
+      // For Book Name
+      if(bookName) {
+        whereClauseObj.bookName = {
+          [Op.like]: bookName + '%'
+        };
+      }
+      // For From & To Date
+      whereClauseObj.createdDate = {
+        [Op.between]: [(fromDate + dayStartTime), (toDate + dayEndTime)]
+      };
+
+      // Get books from DB
+      const bookResult = await this.BookSchema.findAndCountAll({
+        attributes: this.sqlSelectFields,
+        where: whereClauseObj,
+        order: [ ['bookId', 'DESC'] ],
+        limit: limit,
+        offset: offset
+      });
+      // Send error message
+      if(!bookResult || !bookResult.rows || bookResult.rows.length === 0) {
+        return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
+      }
+
+      // Book present
+      return { error: false, message: 'Books found', data: { count: bookResult.count, perPage, pageNum, book: bookResult.rows } };
+    }
+    catch(e) {
+      logger.error(`sequelize:book getListing() function => Error = `, e);
       throw e;
     }
   }

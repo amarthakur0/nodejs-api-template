@@ -13,7 +13,8 @@ const {
   validateCreateBookApi,
   validateUpdateBookApi,
   validateDeleteBookApi,
-  validateGetBookApi
+  validateGetBookApi,
+  validateBookListingApi
 } = reqlib('/middlewares/validations/book');
 
 // Create Book
@@ -138,6 +139,34 @@ router.get('/getall', async (req, res, next) => {
     // Get all Books
     const bookObj = new Book(),
       bookResult = await bookObj.getAll();
+    // Check for error
+    if(bookResult.error) {
+      return setErrorResponse(res, next, bookResult.message, 400, bookResult.errorCode || 0);
+    }
+
+    // Success
+    res.locals._TMP.response.message = bookResult.message;
+    res.locals._TMP.response.data = bookResult.data || {};
+    return next();
+  }
+  catch(e) {
+    logger.error(`Error in ${req.originalUrl} api, Error = `, e);
+    return setErrorResponse(res, next);
+  }
+}, sendResponse);
+
+// Get Book List with the help of Filters & Pagination
+router.get('/listing', validateBookListingApi, async (req, res, next) => {
+  try {
+    // skip to last/response middleware
+    if(res.locals._TMP.skipToLastMiddleware) return next();
+
+    // Request query
+    const inputData = req.query;
+
+    // Get Book list
+    const bookObj = new Book(),
+      bookResult = await bookObj.getListing(inputData);
     // Check for error
     if(bookResult.error) {
       return setErrorResponse(res, next, bookResult.message, 400, bookResult.errorCode || 0);

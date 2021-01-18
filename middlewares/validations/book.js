@@ -6,7 +6,8 @@ const reqlib = require('app-root-path').require;
 const {
   createBookApiSchema,
   updateBookApiSchema,
-  onlyBookIdSchema
+  onlyBookIdSchema,
+  bookListingApiSchema
 } = reqlib('/middlewares/validations/joi/book');
 const { validateApi } = reqlib('/middlewares/validations/common');
 
@@ -31,9 +32,15 @@ const validateGetBookApi = (req, res, next) => {
   return validateApi(req, res, next, req.params, onlyBookIdSchema, 'validateGetBookApi');
 };
 
+// Validate input data for Book Listing api
+const validateBookListingApi = (req, res, next) => {
+  return validateApi(req, res, next, req.query, bookListingApiSchema, 'validateBookListingApi');
+};
+
 module.exports = {
   validateCreateBookApi,
   validateUpdateBookApi,
   validateDeleteBookApi,
-  validateGetBookApi
+  validateGetBookApi,
+  validateBookListingApi
 };

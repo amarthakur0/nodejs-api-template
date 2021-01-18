@@ -253,4 +253,29 @@ router.get('/get/:userId', auth, validateGetUserApi, async (req, res, next) => {
   }
 }, sendResponse);
 
+// Get Users
+router.get('/getall', auth, async (req, res, next) => {
+  try {
+    // skip to last/response middleware
+    if(res.locals._TMP.skipToLastMiddleware) return next();
+
+    // Get user details from DB
+    const userObj = new User(),
+      userResult = await userObj.getAll();
+    // Check for error
+    if(userResult.error) {
+      return setErrorResponse(res, next, userResult.message, 400, userResult.errorCode || 0);
+    }
+
+    // Success
+    res.locals._TMP.response.message = userResult.message;
+    res.locals._TMP.response.data = userResult.data || {};
+    return next();
+  }
+  catch(e) {
+    logger.error(`Error in ${req.originalUrl} api, Error = `, e);
+    return setErrorResponse(res, next);
+  }
+}, sendResponse);
+
 module.exports = router;

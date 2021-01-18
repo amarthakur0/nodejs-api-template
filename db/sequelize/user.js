@@ -18,7 +18,7 @@ class User {
     this.successMsg = getMessage['SUCCESS'];
     this.dataNotFoundMsg = 'User not found';
     this.dataNotFoundErrorCode = getErrorCode['DATA_NOT_FOUND'];
-    this.sqlSelectFields = ['userId', 'username', 'emailId', 'mobileNo', 'displayName'];
+    this.sqlSelectFields = ['userId', 'username', 'emailId', 'mobileNo', 'displayName', 'createdDate'];
   }
 
   // Get User details by User Id
@@ -65,6 +65,28 @@ class User {
     }
     catch(e) {
       logger.error(`sequelize:user getUserByUsername() function => Error = `, e);
+      throw e;
+    }
+  }
+
+  // Get All Users
+  async getAll(inputData = {}) {
+    try {
+      // Get all active Users from DB
+      const userResult = await this.UserSchema.findAll({
+        attributes: this.sqlSelectFields,
+        where: { status: 'A' }
+      });
+      // Send error message
+      if(!userResult || userResult.length === 0) {
+        return { error: true, errorCode: this.dataNotFoundErrorCode, message: this.dataNotFoundMsg };
+      }
+
+      // User present
+      return { error: false, message: 'User found', data: { user: userResult } };
+    }
+    catch(e) {
+      logger.error(`sequelize:user getActive() function => Error = `, e);
       throw e;
     }
   }

@@ -5,14 +5,21 @@ const joi = require('@hapi/joi');
 const {
   getIdError,
   getTextCheckError,
-  validateDateError
+  validateDateError,
+  compareDateError
 } = require('./common.js');
 
 // For ISBN Number
 const isbnNumberError = getTextCheckError('ISBN number', 10, 20);
 
+// For ISBN Number Optional
+const isbnNumberOptionalError = getTextCheckError('ISBN number', 0, 20, false);
+
 // For Book Name
 const bookNameError = getTextCheckError('Book name', 1, 100);
+
+// For Book Name Optional
+const bookNameOptionalError = getTextCheckError('Book name', 0, 100, false);
 
 // For Book Summary
 const bookSummaryError = getTextCheckError('Book summary', 0, 500, false);
@@ -28,6 +35,18 @@ const publishDateError = validateDateError('Publish date');
 
 // For Book Id
 const bookIdError = getIdError('Book Id');
+
+// For From Date
+const fromDateError = validateDateError('From Date');
+
+// For To Date
+const toDateError = compareDateError('To Date', 'fromDate');
+
+// For Page Number
+const pageNumError = getIdError('Page number', false);
+
+// For Per Page
+const perPageError = getIdError('Per page', false);
 
 // For Book Create API
 const createBookApiSchema = joi.object().keys({
@@ -54,8 +73,19 @@ const onlyBookIdSchema = joi.object().keys({
   bookId: bookIdError
 });
 
+// For Book Listing API
+const bookListingApiSchema = joi.object().keys({
+  isbnNumber: isbnNumberOptionalError,
+  bookName: bookNameOptionalError,
+  fromDate: fromDateError,
+  toDate: toDateError,
+  pageNum: pageNumError,
+  perPage: perPageError
+});
+
 module.exports = {
   createBookApiSchema,
   updateBookApiSchema,
-  onlyBookIdSchema
+  onlyBookIdSchema,
+  bookListingApiSchema
 };
